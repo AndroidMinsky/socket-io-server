@@ -11,101 +11,70 @@ const io = require("socket.io")(server, {
 const crypto = require("crypto");
 const randomId = () => crypto.randomBytes(8).toString("hex");
 
-const { InMemorySessionStore } = require("./sessionStore");
-const sessionStore = new InMemorySessionStore();
+const {
+  saveSession,
+  findSession,
+  deleteSession,
+  getUsers,
+} = require("./sessionStore");
 
 io.use((socket, next) => {
   const sessionID = socket.handshake.auth.sessionID;
-  console.log(sessionID);
+
   if (sessionID) {
     // find existing session
-    const session = sessionStore.findSession(sessionID);
-    console.log(session);
+    const session = findSession(sessionID);
+
     if (session) {
       socket.sessionID = sessionID;
-      socket.userID = socket.id;
+      socket.userID = session.userID;
       socket.username = session.username;
+      socket.room = session.room;
       return next();
     }
   }
 
   const username = socket.handshake.auth.username;
+  const room = socket.handshake.auth.room;
   if (!username) {
     return next(new Error("invalid username"));
   }
+  if (!room) {
+    return next(new Error("invalid room"));
+  }
   // create new session
   socket.sessionID = randomId();
-  socket.userID = socket.id;
+  socket.userID = randomId();
   socket.username = username;
+  socket.room = room;
   next();
 });
 
 io.on("connection", (socket) => {
-  sessionStore.saveSession(socket.sessionID, {
+  saveSession({
+    sessionID: socket.sessionID,
     userID: socket.userID,
     username: socket.username,
-    connected: true,
+    room: socket.room,
   });
+
+  socket.join(socket.room);
+
+  io.in(socket.room).emit("users", getUsers(socket.room));
 
   socket.emit("session", {
     sessionID: socket.sessionID,
     userID: socket.userID,
   });
 
-  socket.on("createroom", (roomID) => {
-    socket.join(roomID);
-    console.log(`room ${roomID} was created`);
-  });
-
-  // socket.on("joinroom", (roomID) => {
-  //   socket.join(roomID);
-
-  //   io.of("/").adapter.on("join-room", (room, id) => {
-  //     console.log(`socket ${id} has joined room ${room}`);
-  //     console.log(io.of("/").adapter.rooms);
-  //   });
-  // });
-
-  // const rooms = io.of("/").adapter.rooms;
-  // const sids = io.of("/").adapter.sids;
-
-  // console.log(rooms, sids);
-
-  // const users = [];
-  // for (let [id, socket] of io.of("/").sockets) {
-  //   users.push({
-  //     userID: id,
-  //     username: socket.username,
-  //   });
-  // }
-  // socket.emit("users", users);
-
-  const users = [];
-  const sessions = sessionStore.findAllSessions();
-  sessions.forEach((session) => {
-    users.push({
-      userID: session.userID,
-      username: session.username,
-      connected: session.connected,
-    });
-  });
-  socket.emit("users", users);
-
   socket.broadcast.emit("user connected", {
-    userID: socket.id,
+    userID: socket.userID,
     username: socket.username,
   });
 
-  socket.on("disconnect", () => {
-    socket.broadcast.emit("user disconnected", {
-      userID: socket.id,
-    });
-
-    sessionStore.saveSession(socket.sessionID, {
-      userID: socket.userID,
-      username: socket.username,
-      connected: false,
-    });
+  socket.on("logoff", () => {
+    deleteSession(socket.sessionID);
+    io.in(socket.room).emit("users", getUsers(socket.room));
   });
 });
 
