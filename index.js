@@ -16,37 +16,46 @@ const {
   findSession,
   deleteSession,
   getUsers,
+  getRooms,
 } = require("./sessionStore");
 
 io.use((socket, next) => {
+  // find existing session
   const sessionID = socket.handshake.auth.sessionID;
-
   if (sessionID) {
-    // find existing session
     const session = findSession(sessionID);
-
     if (session) {
       socket.sessionID = sessionID;
       socket.userID = session.userID;
       socket.username = session.username;
       socket.room = session.room;
+      socket.admin = session.admin;
       return next();
     }
   }
 
+  // create new session
   const username = socket.handshake.auth.username;
   const room = socket.handshake.auth.room;
+  const admin = socket.handshake.auth.admin;
   if (!username) {
     return next(new Error("invalid username"));
   }
   if (!room) {
-    return next(new Error("invalid room"));
+    return next(new Error("invalid room ID"));
   }
-  // create new session
-  socket.sessionID = randomId();
-  socket.userID = randomId();
-  socket.username = username;
-  socket.room = room;
+  const rooms = getRooms();
+  if (admin || rooms.includes(room)) {
+    socket.sessionID = randomId();
+    socket.userID = randomId();
+    socket.username = username;
+    socket.room = room;
+    socket.admin = admin;
+    next();
+  } else {
+    return next(new Error("room ID doesn't exist"));
+  }
+
   next();
 });
 
@@ -56,6 +65,7 @@ io.on("connection", (socket) => {
     userID: socket.userID,
     username: socket.username,
     room: socket.room,
+    admin: socket.admin,
   });
 
   socket.join(socket.room);
@@ -67,10 +77,10 @@ io.on("connection", (socket) => {
     userID: socket.userID,
   });
 
-  socket.broadcast.emit("user connected", {
-    userID: socket.userID,
-    username: socket.username,
-  });
+  // socket.broadcast.emit("user connected", {
+  //   userID: socket.userID,
+  //   username: socket.username,
+  // });
 
   socket.on("logoff", () => {
     deleteSession(socket.sessionID);

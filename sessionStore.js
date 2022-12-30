@@ -26,4 +26,14 @@ const deleteSession = (sessionID) => {
 
 const getUsers = (room) => sessions.filter((session) => session.room === room);
 
-module.exports = { saveSession, findSession, deleteSession, getUsers };
+const getRooms = () => {
+  return sessions.map(({ room }) => room);
+};
+
+module.exports = {
+  saveSession,
+  findSession,
+  deleteSession,
+  getUsers,
+  getRooms,
+};
