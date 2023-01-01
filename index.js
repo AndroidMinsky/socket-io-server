@@ -18,6 +18,7 @@ const {
   getUsers,
   getRooms,
 } = require("./sessionStore");
+const { saveGame, getGame, deletePlayer } = require("./gameStore");
 
 io.use((socket, next) => {
   // find existing session
@@ -55,7 +56,6 @@ io.use((socket, next) => {
   } else {
     return next(new Error("room ID doesn't exist"));
   }
-
   next();
 });
 
@@ -70,7 +70,12 @@ io.on("connection", (socket) => {
 
   socket.join(socket.room);
 
-  io.in(socket.room).emit("users", getUsers(socket.room));
+  saveGame({
+    roomID: socket.room,
+    players: getUsers(socket.room),
+  });
+
+  io.in(socket.room).emit("game", getGame(socket.room));
 
   socket.emit("session", {
     sessionID: socket.sessionID,
@@ -84,7 +89,8 @@ io.on("connection", (socket) => {
 
   socket.on("logoff", () => {
     deleteSession(socket.sessionID);
-    io.in(socket.room).emit("users", getUsers(socket.room));
+    deletePlayer(socket.room, socket.userID);
+    io.in(socket.room).emit("game", getGame(socket.room));
   });
 });
 
