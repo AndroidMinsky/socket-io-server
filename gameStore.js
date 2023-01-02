@@ -10,6 +10,7 @@ const saveGame = ({ roomID, players }) => {
       activePlayer: players[0].userID,
       impostor: null,
       word: null,
+      started: false,
     });
   } else {
     games.splice(index, 1, { ...games[index], players });
