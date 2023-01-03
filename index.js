@@ -18,7 +18,16 @@ const {
   getUsers,
   getRooms,
 } = require("./sessionStore");
-const { saveGame, getGame, deletePlayer } = require("./gameStore");
+const {
+  saveGame,
+  getGame,
+  deletePlayer,
+  startGame,
+  enterWord,
+  restartGame,
+  endGame,
+  nextGame,
+} = require("./gameStore");
 
 io.use((socket, next) => {
   // find existing session
@@ -86,6 +95,31 @@ io.on("connection", (socket) => {
   //   userID: socket.userID,
   //   username: socket.username,
   // });
+
+  socket.on("start", (roomID) => {
+    startGame(roomID);
+    io.in(roomID).emit("game", getGame(roomID));
+  });
+
+  socket.on("restart", (roomID) => {
+    restartGame(roomID);
+    io.in(roomID).emit("game", getGame(roomID));
+  });
+
+  socket.on("end", (roomID) => {
+    endGame(roomID);
+    io.in(roomID).emit("game", getGame(roomID));
+  });
+
+  socket.on("next", (roomID) => {
+    nextGame(roomID);
+    io.in(roomID).emit("game", getGame(roomID));
+  });
+
+  socket.on("word", (gameData) => {
+    enterWord(socket.room, gameData);
+    io.in(socket.room).emit("game", getGame(socket.room));
+  });
 
   socket.on("logoff", () => {
     deleteSession(socket.sessionID);
