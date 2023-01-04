@@ -37,18 +37,20 @@ const endGame = (roomID) => {
 
 const nextGame = (roomID) => {
   const game = getGame(roomID);
-  game.started = true;
-  game.word = null;
-  game.impostor = null;
+
   let index = game.players.findIndex(
     (player) => player.userID === game.activePlayer
   );
-  index++;
-  if (index < game.players.length) {
-    game.activePlayer = game.players[index].userID;
-  } else {
+
+  if (index < game.players.length - 1 && !game.started) {
+    game.activePlayer = game.players[index + 1].userID;
+  } else if (index === game.players.length - 1 && !game.started) {
     game.activePlayer = game.players[0].userID;
   }
+
+  game.started = true;
+  game.word = null;
+  game.impostor = null;
 };
 
 const enterWord = (roomID, gameData) => {
@@ -63,6 +65,11 @@ const deletePlayer = (roomID, playerID) => {
   if (index !== -1) game.players.splice(index, 1);
 };
 
+const deleteGame = (roomID) => {
+  const index = games.findIndex((game) => game.roomID === roomID);
+  if (index !== -1) games.splice(index, 1);
+};
+
 module.exports = {
   saveGame,
   getGame,
@@ -72,4 +79,5 @@ module.exports = {
   restartGame,
   endGame,
   nextGame,
+  deleteGame,
 };

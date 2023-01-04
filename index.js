@@ -27,6 +27,7 @@ const {
   restartGame,
   endGame,
   nextGame,
+  deleteGame,
 } = require("./gameStore");
 
 io.use((socket, next) => {
@@ -129,8 +130,17 @@ io.on("connection", (socket) => {
 
   socket.on("logoff", () => {
     deleteSession(socket.sessionID);
-    deletePlayer(socket.room, socket.userID);
-    io.in(socket.room).emit("game", getGame(socket.room));
+    console.log(socket.admin);
+    if (socket.admin) {
+      deleteGame(socket.room);
+      io.in(socket.room).emit("admin-left");
+    } else {
+      const game = getGame(socket.room);
+      if (game) {
+        deletePlayer(socket.room, socket.userID);
+        io.in(socket.room).emit("game", getGame(socket.room));
+      }
+    }
   });
 });
 
