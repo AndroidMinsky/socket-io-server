@@ -49,10 +49,14 @@ io.use((socket, next) => {
   const room = socket.handshake.auth.room;
   const admin = socket.handshake.auth.admin;
   if (!username) {
-    return next(new Error("invalid username"));
+    const err = new Error("no username");
+    next(err);
+    return;
   }
   if (!room) {
-    return next(new Error("invalid room ID"));
+    const err = new Error("no room ID");
+    next(err);
+    return;
   }
   const rooms = getRooms();
   if (admin || rooms.includes(room)) {
@@ -63,7 +67,9 @@ io.use((socket, next) => {
     socket.admin = admin;
     next();
   } else {
-    return next(new Error("room ID doesn't exist"));
+    const err = new Error(`room ${room} ID doesn't exist`);
+    next(err);
+    return;
   }
   next();
 });
