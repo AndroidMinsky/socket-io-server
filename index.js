@@ -41,6 +41,7 @@ io.use((socket, next) => {
       socket.username = session.username;
       socket.room = session.room;
       socket.admin = session.admin;
+      socket.avatar = session.avatar;
       return next();
     }
   }
@@ -49,6 +50,7 @@ io.use((socket, next) => {
   const username = socket.handshake.auth.username;
   const room = socket.handshake.auth.room;
   const admin = socket.handshake.auth.admin;
+  const avatar = socket.handshake.auth.avatar;
   if (!username) {
     const err = new Error("no username");
     next(err);
@@ -66,9 +68,10 @@ io.use((socket, next) => {
     socket.username = username;
     socket.room = room;
     socket.admin = admin;
+    socket.avatar = avatar;
     next();
   } else {
-    const err = new Error(`room ${room} ID doesn't exist`);
+    const err = new Error(`Room "${room}" doesn't exist`);
     next(err);
     return;
   }
@@ -82,6 +85,7 @@ io.on("connection", (socket) => {
     username: socket.username,
     room: socket.room,
     admin: socket.admin,
+    avatar: socket.avatar,
   });
 
   socket.join(socket.room);
