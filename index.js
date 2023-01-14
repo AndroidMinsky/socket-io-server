@@ -4,7 +4,7 @@ const app = express();
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:3080",
   },
 });
 
@@ -102,11 +102,6 @@ io.on("connection", (socket) => {
     userID: socket.userID,
   });
 
-  // socket.broadcast.emit("user connected", {
-  //   userID: socket.userID,
-  //   username: socket.username,
-  // });
-
   socket.on("start", (roomID) => {
     startGame(roomID);
     io.in(roomID).emit("game", getGame(roomID));
@@ -134,7 +129,6 @@ io.on("connection", (socket) => {
 
   socket.on("logoff", () => {
     deleteSession(socket.sessionID);
-    console.log(socket.admin);
     if (socket.admin) {
       deleteGame(socket.room);
       io.in(socket.room).emit("admin-left");
