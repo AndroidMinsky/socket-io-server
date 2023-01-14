@@ -4,7 +4,7 @@ const app = express();
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: "https://socket-io-seven.vercel.app/",
+    origin: "https://socket-io-seven.vercel.app",
   },
 });
 
