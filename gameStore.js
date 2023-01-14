@@ -59,6 +59,11 @@ const enterWord = (roomID, gameData) => {
   game.impostor = gameData.impostor.userID;
 };
 
+const changeActive = (roomID, playerID) => {
+  const game = getGame(roomID);
+  game.activePlayer = playerID;
+};
+
 const deletePlayer = (roomID, playerID) => {
   const game = games.find((game) => game.roomID === roomID);
   const index = game.players.findIndex((player) => player.userID === playerID);
@@ -81,4 +86,5 @@ module.exports = {
   endGame,
   nextGame,
   deleteGame,
+  changeActive,
 };

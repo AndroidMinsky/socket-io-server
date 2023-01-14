@@ -28,6 +28,7 @@ const {
   endGame,
   nextGame,
   deleteGame,
+  changeActive,
 } = require("./gameStore");
 
 io.use((socket, next) => {
@@ -124,6 +125,11 @@ io.on("connection", (socket) => {
 
   socket.on("word", (gameData) => {
     enterWord(socket.room, gameData);
+    io.in(socket.room).emit("game", getGame(socket.room));
+  });
+
+  socket.on("change-active", (userID) => {
+    changeActive(socket.room, userID);
     io.in(socket.room).emit("game", getGame(socket.room));
   });
 
