@@ -147,7 +147,7 @@ io.on("connection", (socket) => {
   //   }
   // });
 
-  socket.on("logoff", ({ hero }) => {
+  socket.on("logoff", (hero) => {
     deleteSession(hero.sessionID);
     if (hero.admin) {
       deleteGame(hero.room);
