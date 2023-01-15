@@ -133,16 +133,30 @@ io.on("connection", (socket) => {
     io.in(socket.room).emit("game", getGame(socket.room));
   });
 
-  socket.on("logoff", () => {
-    deleteSession(socket.sessionID);
-    if (socket.admin) {
-      deleteGame(socket.room);
-      io.in(socket.room).emit("admin-left");
+  // socket.on("logoff", () => {
+  //   deleteSession(socket.sessionID);
+  //   if (socket.admin) {
+  //     deleteGame(socket.room);
+  //     io.in(socket.room).emit("admin-left");
+  //   } else {
+  //     const game = getGame(socket.room);
+  //     if (game) {
+  //       deletePlayer(socket.room, socket.userID);
+  //       io.in(socket.room).emit("game", getGame(socket.room));
+  //     }
+  //   }
+  // });
+
+  socket.on("logoff", ({ hero }) => {
+    deleteSession(hero.sessionID);
+    if (hero.admin) {
+      deleteGame(hero.room);
+      io.in(hero.room).emit("admin-left");
     } else {
-      const game = getGame(socket.room);
+      const game = getGame(hero.room);
       if (game) {
-        deletePlayer(socket.room, socket.userID);
-        io.in(socket.room).emit("game", getGame(socket.room));
+        deletePlayer(hero.room, hero.userID);
+        io.in(hero.room).emit("game", getGame(hero.room));
       }
     }
   });
