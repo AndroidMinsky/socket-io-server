@@ -4,7 +4,7 @@ const app = express();
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: "https://socket-io-seven.vercel.app",
+    origin: ["https://socket-io-seven.vercel.app", "http://localhost:3000"],
   },
 });
 
@@ -148,15 +148,17 @@ io.on("connection", (socket) => {
   // });
 
   socket.on("logoff", (hero) => {
-    deleteSession(hero.sessionID);
-    if (hero.admin) {
-      deleteGame(hero.room);
-      io.in(hero.room).emit("admin-left");
-    } else {
-      const game = getGame(hero.room);
-      if (game) {
-        deletePlayer(hero.room, hero.userID);
-        io.in(hero.room).emit("game", getGame(hero.room));
+    if (hero) {
+      deleteSession(hero.sessionID);
+      if (hero.admin) {
+        deleteGame(hero.room);
+        io.in(hero.room).emit("admin-left");
+      } else {
+        const game = getGame(hero.room);
+        if (game) {
+          deletePlayer(hero.room, hero.userID);
+          io.in(hero.room).emit("game", getGame(hero.room));
+        }
       }
     }
   });
